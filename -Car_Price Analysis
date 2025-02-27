@@ -1,0 +1,40 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns-----
+import matplotlib.pyplot as plt
+import os
+print(os.getcwd())  # Check current working directory
+print(os.listdir())  # List files in the directory
+from google.colab import drive
+drive.mount('/content/drive')
+
+df = pd.read_csv("/content/drive/MyDrive/car_data.csv") 
+df.info()
+df.describe()
+df.head()
+null_counts = df.isnull().sum()
+null_percentage = (null_counts / len(df)) * 100
+print(null_counts[null_counts > 0])
+threshold = 40  # Set a threshold (e.g., 40% null values)
+df = df.drop(columns=null_percentage[null_percentage > threshold].index)
+df = df.dropna()
+df = df.drop(columns=['car_ID'])
+df = df.sort_values(by='price', ascending=False)
+sns.pairplot(df)
+plt.show()
+plt.figure(figsize=(12,8))
+sns.heatmap(df.corr(), annot=True, cmap="coolwarm")
+plt.show()
+df['carCompany'] = df['CarName'].apply(lambda x: x.split(" ")[0])
+df = df.drop(columns=['CarName'])
+df['carCompany'] = df['carCompany'].replace({
+    'vw': 'volkswagen', 'vokswagen': 'volkswagen', 'porcshce': 'porsche',
+    'toyouta': 'toyota', 'Nissan': 'nissan', 'maxda': 'mazda'
+})
+df = pd.get_dummies(df, columns=['carCompany'], drop_first=True)
+df['car_stability'] = df['wheelbase'] / df['carlength']
+df = df.drop(columns=['carwidth', 'curbweight', 'wheelbase', 'highwaympg', 'car_stability'])
+df.hist(figsize=(12, 8))
+plt.show()
+sns.barplot(x='fueltype', y='price', data=df)
+plt.show()
